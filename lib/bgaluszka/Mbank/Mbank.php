@@ -235,6 +235,9 @@ class Mbank
 		));
 
 		$accounts = array();
+		if (!isset($response['properties'])) {
+            return $accounts;
+        }
 
 		foreach ($response['properties'] as $key => $property) {
 			if (in_array($key, array('CurrentAccountsList',
@@ -255,6 +258,63 @@ class Mbank
 
 		return $accounts;
 	}
+
+    /**
+     * Lists your accounts
+     *
+     * @return array
+     */
+    public function accountsByGroups()
+    {
+        /** @var array $response */
+        $response = $this->curl(array(
+            CURLOPT_URL        => $this->url . '/'.$this->countryCode . '/Accounts/Accounts/AccountsGroups',
+        ));
+
+        $accounts = array();
+        if (!isset($response['accountsGroups'])) {
+            return $accounts;
+        }
+
+        foreach ($response['accountsGroups'] as $group) {
+            foreach ($group['accounts'] as $account) {
+                $accounts[str_replace(' ', '', $account['accountNumber'])] = [
+                    'product'  => $account['name'],
+                    'name'     => $account['customName'],
+                    'iban'     => $account['accountNumber'],
+                    'value'    => (float)$account['balance'],
+                    'currency' => $account['currency'],
+                ];
+            }
+        }
+
+        return $accounts;
+    }
+
+    public function savingAccounts()
+    {
+        /** @var array $response */
+        $response = $this->curl(array(
+            CURLOPT_URL        => $this->url . '/'.$this->countryCode . '/Accounts/Accounts/SavingAccounts',
+        ));
+
+        $accounts = array();
+        if (!isset($response['accounts'])) {
+            return $accounts;
+        }
+
+            foreach ($response['accounts'] as $account) {
+                $accounts[str_replace(' ', '', $account['accountNumber'])] = [
+                    'product'  => $account['name'],
+                    'name'     => $account['customName'],
+                    'iban'     => $account['accountNumber'],
+                    'value'    => (float)$account['balance'],
+                    'currency' => $account['currency'],
+                ];
+            }
+
+        return $accounts;
+    }
 
 	/**
 	 * Lists account operations
